@@ -124,13 +124,7 @@ model, vectorizer = load_or_train()
 
 # ---------------- LOGGING ----------------
 def log_scan(url, prediction, probability):
-    file_exists = os.path.exists("scan_log.csv")
-
-    with open("scan_log.csv", "a", newline="") as f:
-        writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow(["url","prediction","probability","time"])
-        writer.writerow([url, prediction, probability, datetime.now()])
+    pass
 
 # ---------------- ROUTES ----------------
 @app.route("/")
@@ -139,31 +133,34 @@ def index():
 
 @app.route("/history")
 def history():
-    data = []
-    if os.path.exists("scan_log.csv"):
-        with open("scan_log.csv", "r") as f:
-            reader = csv.DictReader(f)
-            data = list(reader)
-    return jsonify(data[::-1])
+    return jsonify([])
+
+# @app.route("/stats")
+# def stats():
+#     total = 0
+#     unsafe = 0
+
+#     if os.path.exists("scan_log.csv"):
+#         with open("scan_log.csv", "r") as f:
+#             reader = csv.DictReader(f)
+#             for row in reader:
+#                 total += 1
+#                 if row["prediction"].lower() == "unsafe":
+#                     unsafe += 1
+                    
+
+#     return jsonify({
+#         "total": total,
+#         "unsafe": unsafe,
+#         "safe": total - unsafe
+#     })
 
 @app.route("/stats")
 def stats():
-    total = 0
-    unsafe = 0
-
-    if os.path.exists("scan_log.csv"):
-        with open("scan_log.csv", "r") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                total += 1
-                if row["prediction"].lower() == "unsafe":
-                    unsafe += 1
-                    
-
     return jsonify({
-        "total": total,
-        "unsafe": unsafe,
-        "safe": total - unsafe
+        "total": 0,
+        "unsafe": 0,
+        "safe": 0
     })
 
 @app.route("/check_url", methods=["POST"])
@@ -232,12 +229,7 @@ def check_url():
 
 @app.route("/clear_history", methods=["POST"])
 def clear_history():
-    try:
-        with open("scan_log.csv", "w") as f:
-            f.write("url,prediction,probability,time\n")
-        return jsonify({"message": "History cleared"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify({"message": "History disabled on Vercel"})
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
