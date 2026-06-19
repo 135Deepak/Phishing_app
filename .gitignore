@@ -1,0 +1,7 @@
+.env
+PhiUSIIL_Phishing_URL_Dataset.csv
+phish_model.pkl
+vectorizer.pkl
+scan_log.csv
+__pycache__/
+*.pyc
