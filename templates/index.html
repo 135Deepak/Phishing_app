@@ -190,6 +190,7 @@ form.addEventListener('submit', async (e) => {
     spinnerArea.style.display = 'none';
     resultCard.style.display = 'block';
 
+    saveToHistory(data);
     loadHistory();
     loadStats();
 
@@ -240,51 +241,71 @@ function dismiss() {
   resultCard.style.display = 'none';
 }
 
-async function loadHistory() {
-  const res = await fetch('/history');
-  const data = await res.json();
+function saveToHistory(data) {
+  if (data.error) return;
+
+  let history = JSON.parse(localStorage.getItem("scanHistory")) || [];
+
+  history.unshift({
+    url: data.url,
+    prediction: data.is_unsafe ? "unsafe" : "safe",
+    probability: data.probability || "-",
+    time: new Date().toLocaleString()
+  });
+
+  history = history.slice(0, 50);
+
+  localStorage.setItem("scanHistory", JSON.stringify(history));
+}
+
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem("scanHistory")) || [];
 
   const table = document.getElementById('historyTable');
   table.innerHTML = '';
 
-  data.slice(0, 10).forEach(row => {
-    const status = row.prediction === "unsafe" ? "❌ Unsafe" : "✅ Safe";
+  history.forEach(row => {
+    const status = row.prediction === "unsafe"
+      ? "❌ Unsafe"
+      : "✅ Safe";
 
     table.innerHTML += `
       <tr>
         <td>${row.url}</td>
         <td>${status}</td>
-        <td>${row.probability || '-'}</td>
+        <td>${row.probability}</td>
         <td>${row.time}</td>
       </tr>
     `;
   });
 }
 
-loadHistory();
-async function loadStats() {
-  const res = await fetch('/stats');
-  const data = await res.json();
+function loadStats() {
+  const history = JSON.parse(localStorage.getItem("scanHistory")) || [];
+
+  const total = history.length;
+  const unsafe = history.filter(x => x.prediction === "unsafe").length;
+  const safe = total - unsafe;
 
   document.getElementById('statsBox').innerHTML =
-    `📊 Total Scans: ${data.total} | ❌ Unsafe: ${data.unsafe} | ✅ Safe: ${data.safe}`;
+    `📊 Total Scans: ${total} | ❌ Unsafe: ${unsafe} | ✅ Safe: ${safe}`;
 }
 
-loadStats();
-async function clearHistory() {
+function clearHistory() {
   if (!confirm("Are you sure you want to clear scan history?")) return;
 
-  const res = await fetch('/clear_history', {
-    method: 'POST'
-  });
-
-  const data = await res.json();
-
-  alert(data.message || "History cleared");
+  localStorage.removeItem("scanHistory");
 
   loadHistory();
   loadStats();
+
+  alert("History cleared successfully");
 }
+
+  // saveToHistory(data);
+  loadHistory();
+  loadStats();
+
 
 </script>
 
